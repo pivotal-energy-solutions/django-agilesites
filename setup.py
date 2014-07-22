@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(name='django-agilesites',
       version='1.0',
-      description='This provides a django the ability of dynamic switching of templates and static directories based on host.'
+      description='This provides a django the ability of dynamic switching of templates and static directories based on host.',
       author='Steven Klass',
       author_email='sklass@pivotalenergysolutions.com',
       license='Apache License (2.0)',
