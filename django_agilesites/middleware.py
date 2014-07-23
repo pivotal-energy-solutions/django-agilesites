@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import logging
-import os
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -15,9 +14,6 @@ from .utils import make_tls_property
 
 SITE_ID = settings.__dict__['_wrapped'].__class__.SITE_ID = make_tls_property()
 TEMPLATE_LOADERS = settings.__dict__['_wrapped'].__class__.TEMPLATE_LOADERS = make_tls_property(settings.TEMPLATE_LOADERS)
-STATIC_URL = settings.__dict__['_wrapped'].__class__.STATIC_URL = make_tls_property(settings.STATIC_URL)
-
-# STATICFILES_FINDERS = settings.__dict__['_wrapped'].__class__.STATICFILES_FINDERS = make_tls_property(settings.STATICFILES_FINDERS)
 
 log = logging.getLogger(__name__)
 
@@ -26,40 +22,8 @@ class AgileSitesMiddleware(object):
     """
     Sets settings.SITE_ID based on request's domain.
     Sets settings.TEMPLATE_LOADERS based on request's domain.
-    TODO:
-    Sets settings.STATICFILES_FINDERS based on request's domain.
-
-    This supports hostname redirects.  Subdomains are not considered.
+    This supports hostname aliases.  Subdomains are not considered.
     """
-
-    def setup_template_loaders(self, site):
-        """Sets up the template loader path"""
-        dynamic_loader = ("django_agilesites.loaders.AgileSiteAppDirectoriesFinder", site)
-        if dynamic_loader[0] not in list(TEMPLATE_LOADERS.value):
-            log.debug("Modifying settings.TEMPLATE_LOADERS to use site scope: %r", site)
-            self._old_TEMPLATE_LOADERS = settings.TEMPLATE_LOADERS
-            template_loaders = list(TEMPLATE_LOADERS.value)
-            # Insert the dynamic loader just in front of the normal app_directories one.
-            template_loaders.insert(
-                template_loaders.index('django.template.loaders.app_directories.Loader'),
-                dynamic_loader
-            )
-            TEMPLATE_LOADERS.value = template_loaders
-
-    # def setup_static_finders(self, site):
-    #     """Sets up the static file finder path"""
-    #     dynamic_loader = "django_agilesites.finders.AgileSiteAppDirectoriesFinder"
-    #     if dynamic_loader[0] not in list(STATICFILES_FINDERS.value):
-    #         log.debug("Modifying settings.STATICFILES_FINDERS to use site scope: %r", site)
-    #         static_finders = list(STATICFILES_FINDERS.value)
-    #         # Insert the dynamic loader just in front of the normal app_directories one.
-    #         # static_finders.insert(
-    #             static_finders.index('django.contrib.staticfiles.finders.FileSystemFinder'),
-    #             dynamic_loader
-    #         )
-    #         print(list(static_finders))
-    #         STATICFILES_FINDERS.value = [dynamic_loader]
-
 
     def process_request(self, request):
 
@@ -94,28 +58,29 @@ class AgileSitesMiddleware(object):
 
         SITE_ID.value = site.id
 
-        # At this point the ID is set
+        # At this point the ID is set so leave if we are only ajax.
         if request.is_ajax():
             return
 
-        self.setup_template_loaders(site)
+        dynamic_loader = ("django_agilesites.loaders.AgileSiteAppDirectoriesFinder", site)
+        if dynamic_loader[0] not in list(TEMPLATE_LOADERS.value):
+            log.debug("Modifying settings.TEMPLATE_LOADERS to use site scope: %r", site)
+            self._old_TEMPLATE_LOADERS = settings.TEMPLATE_LOADERS
+            template_loaders = list(TEMPLATE_LOADERS.value)
+            # Insert the dynamic loader just in front of the normal app_directories one.
+            template_loaders.insert(
+                template_loaders.index('django.template.loaders.app_directories.Loader'),
+                dynamic_loader
+            )
+            TEMPLATE_LOADERS.value = template_loaders
 
-        if settings.SITE_FOLDERS.get(domain):
-            url = os.path.join(self._old_STATIC_URL, settings.SITE_FOLDERS[domain])
-            url += "/" if self._old_STATIC_URL.endswith("/") else ""
-            log.debug("Using static url for: {domain} to site {url}".format(domain=domain, url=url))
-            STATIC_URL.value = url
-
-        # self.setup_static_finders(site)
-        return None  # Continue normally
+        return None
 
 
     def process_response(self, request, response):
 
         if getattr(request, "urlconf", None):
             patch_vary_headers(response, ('Host',))
-        # reset TEMPLATE_DIRS because we unconditionally add to it when
-        # processing the request
 
         try:
             if self._old_TEMPLATE_DIRS is not None:
