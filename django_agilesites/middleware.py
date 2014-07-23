@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import logging
+import os
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -14,6 +15,8 @@ from .utils import make_tls_property
 
 SITE_ID = settings.__dict__['_wrapped'].__class__.SITE_ID = make_tls_property()
 TEMPLATE_LOADERS = settings.__dict__['_wrapped'].__class__.TEMPLATE_LOADERS = make_tls_property(settings.TEMPLATE_LOADERS)
+STATIC_URL = settings.__dict__['_wrapped'].__class__.STATIC_URL = make_tls_property(settings.STATIC_URL)
+
 # STATICFILES_FINDERS = settings.__dict__['_wrapped'].__class__.STATICFILES_FINDERS = make_tls_property(settings.STATICFILES_FINDERS)
 
 log = logging.getLogger(__name__)
@@ -60,15 +63,20 @@ class AgileSitesMiddleware(object):
 
     def process_request(self, request):
 
-        domain = request.get_host().split(':')[0]
+        if request.is_ajax():
+            return
+
         self._old_TEMPLATE_DIRS = getattr(settings, "TEMPLATE_DIRS", None)
-        # self._old_STATICFILES_FINDERS = getattr(settings, "STATICFILES_FINDERS", None)
+        self._old_STATIC_URL = getattr(settings, "STATIC_URL", None)
 
         self.site_aliases =  getattr(settings, "SITE_ALIASES", {})
         self.default_site_domain =  getattr(settings, "DEFAULT_SITE_DOMAIN", None)
 
         if not self.default_site_domain:
             raise ImproperlyConfigured("You must have DEFAULT_SITE_DOMAIN defined in settings")
+
+        domain = request.get_host().split(':')[0]
+
 
         if domain not in self.site_aliases:
             domain = settings.DEFAULT_SITE_DOMAIN
@@ -78,13 +86,26 @@ class AgileSitesMiddleware(object):
 
         try:
             site = Site.objects.get(domain=domain)
-            log.debug("Using domain: {domain} to site {site}".format(domain=domain, site=site))
+            log.debug("Using domain: {domain} to site {site!r}".format(domain=domain, site=site))
         except Site.DoesNotExist:
             site = Site.objects.get(id=settings.SITE_ID)
-            log.warn("Request on domain %r has no matching Site object.  Defaulting to %r.", site)
+            log.error("Request on domain %r has no matching Site object.  Defaulting to "
+                      "{site!r}.".format(site=site))
 
         SITE_ID.value = site.id
+
+        # At this point the ID is set
+        if request.is_ajax():
+            return
+
         self.setup_template_loaders(site)
+
+        if settings.SITE_FOLDERS.get(domain):
+            url = os.path.join(self._old_STATIC_URL, settings.SITE_FOLDERS[domain])
+            url += "/" if self._old_STATIC_URL.endswith("/") else ""
+            log.debug("Using static url for: {domain} to site {url}".format(domain=domain, url=url))
+            STATIC_URL.value = url
+
         # self.setup_static_finders(site)
         return None  # Continue normally
 
@@ -95,9 +116,17 @@ class AgileSitesMiddleware(object):
             patch_vary_headers(response, ('Host',))
         # reset TEMPLATE_DIRS because we unconditionally add to it when
         # processing the request
+
         try:
             if self._old_TEMPLATE_DIRS is not None:
                 settings.TEMPLATE_DIRS = self._old_TEMPLATE_DIRS
         except AttributeError:
             pass
+
+        try:
+            if self._old_STATIC_URL is not None:
+                settings.STATIC_URL = self._old_STATIC_URL
+        except AttributeError:
+            pass
+
         return response
