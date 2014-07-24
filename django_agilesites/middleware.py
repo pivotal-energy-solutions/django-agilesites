@@ -68,6 +68,7 @@ class AgileSitesMiddleware(object):
             self._old_TEMPLATE_LOADERS = settings.TEMPLATE_LOADERS
             template_loaders = list(TEMPLATE_LOADERS.value)
             # Insert the dynamic loader just in front of the normal app_directories one.
+
             template_loaders.insert(
                 template_loaders.index('django.template.loaders.app_directories.Loader'),
                 dynamic_loader
