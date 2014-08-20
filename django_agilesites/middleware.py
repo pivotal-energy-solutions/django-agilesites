@@ -39,14 +39,16 @@ class AgileSitesMiddleware(object):
         if not self.default_site_domain:
             raise ImproperlyConfigured("You must have DEFAULT_SITE_DOMAIN defined in settings")
 
-        domain = request.get_host().split(':')[0]
+        base_domain = domain = request.get_host().split(':')[0]
 
         if domain in self.site_aliases:
             domain = settings.SITE_ALIASES[domain]
 
         try:
             site = Site.objects.get(domain=domain)
-            log.debug("Using domain: {domain} to site {site!r}".format(domain=domain, site=site))
+            dom = "{base_domain} → {domain}".format(base_domain=base_domain, domain=domain)
+            dom = dom if base_domain != domain else domain
+            log.info("Using domain: {domain} to site {site!r}".format(domain=dom, site=site))
         except Site.DoesNotExist:
             try:
                 site = Site.objects.get(id=settings.SITE_ID)
@@ -66,7 +68,7 @@ class AgileSitesMiddleware(object):
 
         dynamic_loader = ("django_agilesites.loaders.AgileSiteAppDirectoriesFinder", site)
         if dynamic_loader[0] not in list(TEMPLATE_LOADERS.value):
-            log.debug("Modifying settings.TEMPLATE_LOADERS to use site scope: %r", site)
+            log.info("Modifying settings.TEMPLATE_LOADERS to use site scope: %r", site)
             self._old_TEMPLATE_LOADERS = settings.TEMPLATE_LOADERS
             template_loaders = list(TEMPLATE_LOADERS.value)
             # Insert the dynamic loader just in front of the normal app_directories one.
