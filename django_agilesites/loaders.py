@@ -21,8 +21,12 @@ class AgileSiteAppDirectoriesFinder(Loader):
         self.logged = False
 
     def get_template_sources(self, template_name, template_dirs=None):
+        """This will append the site-prefix to every application template directory.  If
+        SITE_ROOT is defined in settings it will scope to your application.  This is to enable
+        the file finder to work correctly"""
 
         site_id = settings.SITE_ID
+        site_root = getattr(settings, 'SITE_ROOT')
         site_prefixes = settings.SITE_FOLDERS.get(site_id, [])
 
         if not self.logged:
@@ -37,6 +41,8 @@ class AgileSiteAppDirectoriesFinder(Loader):
             template_dirs = app_template_dirs
 
         for app_dir in template_dirs:
+            if site_root and site_root not in app_dir:
+                continue
             for site_prefix in site_prefixes:
                 _app_template_dirs.append(safe_join(app_dir, site_prefix))
 
