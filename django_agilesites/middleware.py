@@ -27,9 +27,6 @@ class AgileSitesMiddleware(object):
 
     def process_request(self, request):
 
-        if request.is_ajax():
-            return
-
         self._old_TEMPLATE_DIRS = getattr(settings, "TEMPLATE_DIRS", None)
         self._old_STATIC_URL = getattr(settings, "STATIC_URL", None)
 
