@@ -52,9 +52,15 @@ class AgileSitesMiddleware(object):
             site = Site.objects.get(domain=domain)
             log.debug("Using domain: {domain} to site {site!r}".format(domain=domain, site=site))
         except Site.DoesNotExist:
-            site = Site.objects.get(id=settings.SITE_ID)
-            log.error("Request on domain %r has no matching Site object.  Defaulting to "
-                      "{site!r}.".format(site=site))
+            try:
+                site = Site.objects.get(id=settings.SITE_ID)
+                log.error("Request on domain %r has no matching Site object.  "
+                          "Defaulting to {site!r}.".format(site=site))
+            except Site.DoesNotExist:
+                site_id = getattr(settings, 'SITE_ID', 1)
+                site, create = Site.objects.get_or_create(id=site_id, domain=domain)
+                log.error("Request on domain %r has no matching Site object.  "
+                          "Creating to {site!r}.".format(site=site))
 
         SITE_ID.value = site.id
 
