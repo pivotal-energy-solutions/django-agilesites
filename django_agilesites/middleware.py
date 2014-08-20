@@ -41,11 +41,7 @@ class AgileSitesMiddleware(object):
 
         domain = request.get_host().split(':')[0]
 
-
-        if domain not in self.site_aliases:
-            domain = settings.DEFAULT_SITE_DOMAIN
-        else:
-            # Convert an alias name into the major name that categorizes the site configuration.
+        if domain in self.site_aliases:
             domain = settings.SITE_ALIASES[domain]
 
         try:
