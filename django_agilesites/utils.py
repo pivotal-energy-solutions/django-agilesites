@@ -24,8 +24,10 @@ def make_tls_property(default=None):
 
         def _get_value(self):
             return getattr(self.local, 'value', default)
+
         def _set_value(self, value):
             self.local.value = value
+
         value = property(_get_value, _set_value)
 
     return TLSProperty()

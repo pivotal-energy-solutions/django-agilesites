@@ -12,8 +12,7 @@ from django.utils.cache import patch_vary_headers
 
 from .utils import make_tls_property
 
-SITE_ID = settings.__dict__['_wrapped'].__class__.SITE_ID = make_tls_property()
-TEMPLATE_LOADERS = settings.__dict__['_wrapped'].__class__.TEMPLATE_LOADERS = make_tls_property(settings.TEMPLATE_LOADERS)
+SITE_ID = settings.__dict__['_wrapped'].__class__.SITE_ID = make_tls_property(settings.SITE_ID)
 
 log = logging.getLogger(__name__)
 
@@ -27,19 +26,17 @@ class AgileSitesMiddleware(object):
 
     def process_request(self, request):
 
-        self._old_TEMPLATE_DIRS = getattr(settings, "TEMPLATE_DIRS", None)
-        self._old_STATIC_URL = getattr(settings, "STATIC_URL", None)
-
-        self.site_aliases =  getattr(settings, "SITE_ALIASES", {})
-        self.default_site_domain =  getattr(settings, "DEFAULT_SITE_DOMAIN", None)
+        self.site_aliases = getattr(settings, "SITE_ALIASES", {})
+        self.default_site_domain = getattr(settings, "DEFAULT_SITE_DOMAIN", None)
 
         if not self.default_site_domain:
             raise ImproperlyConfigured("You must have DEFAULT_SITE_DOMAIN defined in settings")
 
-        base_domain = domain = request.get_host().split(':')[0]
+        base_domain = domain = dom = request.get_host().split(':')[0]
 
         if domain in self.site_aliases:
             domain = settings.SITE_ALIASES[domain]
+
 
         try:
             site = Site.objects.get(domain=domain)
@@ -59,22 +56,8 @@ class AgileSitesMiddleware(object):
 
         SITE_ID.value = site.id
 
-        # At this point the ID is set so leave if we are only ajax.
-        if request.is_ajax():
-            return
-
-        dynamic_loader = ("django_agilesites.loaders.AgileSiteAppDirectoriesFinder", site)
-        if dynamic_loader[0] not in list(TEMPLATE_LOADERS.value):
-            log.info("Modifying settings.TEMPLATE_LOADERS to use site scope: %r", site)
-            self._old_TEMPLATE_LOADERS = settings.TEMPLATE_LOADERS
-            template_loaders = list(TEMPLATE_LOADERS.value)
-            # Insert the dynamic loader just in front of the normal app_directories one.
-
-            template_loaders.insert(
-                template_loaders.index('django.template.loaders.app_directories.Loader'),
-                dynamic_loader
-            )
-            TEMPLATE_LOADERS.value = template_loaders
+        log.error("Using domain: {domain} to site {site!r} [{site_id}]".format(
+            domain=dom,  site=site,  site_id=site.id))
 
         return None
 
@@ -83,17 +66,5 @@ class AgileSitesMiddleware(object):
 
         if getattr(request, "urlconf", None):
             patch_vary_headers(response, ('Host',))
-
-        try:
-            if self._old_TEMPLATE_DIRS is not None:
-                settings.TEMPLATE_DIRS = self._old_TEMPLATE_DIRS
-        except AttributeError:
-            pass
-
-        try:
-            if self._old_STATIC_URL is not None:
-                settings.STATIC_URL = self._old_STATIC_URL
-        except AttributeError:
-            pass
 
         return response
