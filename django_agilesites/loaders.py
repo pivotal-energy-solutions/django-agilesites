@@ -3,13 +3,11 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
-import os
 import logging
-from django.contrib.sites.models import Site
 
 from django.template.loaders.app_directories import Loader, app_template_dirs
-from django.core.cache import cache
 from django.conf import settings
+
 from django.utils._os import safe_join
 
 log = logging.getLogger(__name__)

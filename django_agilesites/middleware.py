@@ -7,7 +7,6 @@ import logging
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-from django.core.exceptions import ImproperlyConfigured
 from django.utils.cache import patch_vary_headers
 
 from .utils import make_tls_property
