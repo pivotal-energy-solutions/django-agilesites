@@ -18,7 +18,7 @@ class AgileSiteAppDirectoriesFinder(Loader):
         self.site = site
 
     def get_template_sources(self, template_name, template_dirs=None):
-        site_prefixes = settings.SITE_FOLDERS[self.site.domain]
+        site_prefixes = settings.SITE_FOLDERS.get(self.site.domain)
 
         _app_template_dirs = None
         if site_prefixes is not None:
