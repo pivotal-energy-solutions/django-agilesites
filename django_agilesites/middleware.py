@@ -36,7 +36,7 @@ class AgileSitesMiddleware(object):
 
         try:
             site = Site.objects.get(**query)
-            log.info("Using domain: {domain} ({query}) site {site!r}".format(
+            log.debug("Using domain: {domain} ({query}) site {site!r}".format(
                 domain=domain, query=query, site=site))
         except Site.DoesNotExist:
             site_id = getattr(settings, 'SITE_ID', 1)
