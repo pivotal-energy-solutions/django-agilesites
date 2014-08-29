@@ -28,7 +28,7 @@ class AgileSiteAppDirectoriesFinder(Loader):
         site_prefixes = settings.SITE_FOLDERS.get(site_id, [])
 
         if not self.logged:
-            log.debug("Getting sources = {} ({}) - {} {}".format(
+            log.debug("Getting sources = {0} ({1}) - {2} {3}".format(
                 site_id,  site_prefixes, template_name, template_dirs))
             self.logged = True
 
