@@ -36,15 +36,13 @@ class AgileSitesMiddleware(object):
 
         try:
             site = Site.objects.get(**query)
-            log.debug("Using domain: {domain} ({query}) site {site!r}".format(
-                domain=domain, query=query, site=site))
+            # log.debug("Using domain: %s (%s) on site %s", "{}".format(domain), "{}".format(query), "{!r}".format(site))
         except Site.DoesNotExist:
             site_id = getattr(settings, 'SITE_ID', 1)
             site, create = Site.objects.get_or_create(id=site_id, defaults={'domain':domain})
             create = "Creating" if create else "Using existing"
-            log.error("Request on domain {domain} ({query}) has no matching Site object.  "
-                      "{create} to {site!r}.".format(domain=domain, query=query, site=site,
-                                                     create=create))
+            log.error("Request on domain %s (%s) has no matching Site object. %s to %s",
+                      "{}".format(domain), "{}".format(query), create, "{!r}".format(site))
 
         SITE_ID.value = site.id
         return None
