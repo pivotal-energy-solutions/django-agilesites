@@ -5,7 +5,7 @@ from __future__ import print_function
 
 import logging
 
-from django.template.loaders.app_directories import Loader, app_template_dirs
+from django.template.loaders import app_directories
 from django.conf import settings
 
 from django.utils._os import safe_join
@@ -13,9 +13,10 @@ from django.utils._os import safe_join
 log = logging.getLogger(__name__)
 
 
-class AgileSiteAppDirectoriesFinder(Loader):
+class AgileSiteAppDirectoriesFinder(app_directories.Loader):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, engine=None, *args, **kwargs):
+        self.engine = engine
         self.logged = False
 
     def get_template_sources(self, template_name, template_dirs=None):
@@ -37,7 +38,12 @@ class AgileSiteAppDirectoriesFinder(Loader):
 
         _app_template_dirs = []
         if not template_dirs:
-            template_dirs = app_template_dirs
+            try:
+                # Post Django 1.8
+                template_dirs = app_directories.get_app_template_dirs('templates')
+            except AttributeError:
+                # Pre Django 1.8
+                template_dirs = app_directories.app_template_dirs
 
         for app_dir in template_dirs:
             if site_root and site_root not in app_dir:
