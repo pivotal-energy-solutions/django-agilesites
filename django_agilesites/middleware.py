@@ -7,6 +7,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.db.models import Q
 from django.utils.cache import patch_vary_headers
 
 from .utils import make_tls_property
@@ -27,16 +28,18 @@ class AgileSitesMiddleware(object):
         domain = request.get_host().split(':')[0]
         self.site_aliases = getattr(settings, "SITE_ALIASES", {})
 
-        query = {}
+        query = Q(domain=domain)
         if domain in self.site_aliases:
-            domain_id = settings.SITE_ALIASES[domain]
-            query['id'] = domain_id
-        else:
-            query['domain'] = domain
+            query |= Q(id=settings.SITE_ALIASES[domain])
 
         try:
-            site = Site.objects.get(**query)
-            # log.debug("Using domain: %s (%s) on site %s", "{}".format(domain), "{}".format(query), "{!r}".format(site))
+            site = Site.objects.get(query)
+        except Site.MultipleObjectsReturned:
+            log.error('Multiple Sites found for query %r', query)
+            if domain in self.site_aliases:
+                site = Site.objects.get(id=settings.SITE_ALIASES[domain])
+            else:
+                site = Site.objects.get(domain=domain)
         except Site.DoesNotExist:
             site_id = getattr(settings, 'SITE_ID', 1)
             site, create = Site.objects.get_or_create(id=site_id, defaults={'domain':domain})
