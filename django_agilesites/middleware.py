@@ -23,8 +23,11 @@ class AgileSitesMiddleware(object):
     This supports hostname aliases.  Subdomains are not considered.
     """
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
 
+    def __call__(self, request):
+        # Process the request
         domain = request.get_host().split(':')[0]
         self.site_aliases = getattr(settings, "SITE_ALIASES", {})
 
@@ -48,10 +51,11 @@ class AgileSitesMiddleware(object):
                       "{}".format(domain), "{}".format(query), create, "{!r}".format(site))
 
         SITE_ID.value = site.id
-        return None
 
+        # Perform request
+        response = self.get_response(request)
 
-    def process_response(self, request, response):
+        # Process the response
 
         if getattr(request, "urlconf", None):
             patch_vary_headers(response, ('Host',))
