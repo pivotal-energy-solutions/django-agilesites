@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import logging
 
+import os
 from django.template.loaders import app_directories
 from django.conf import settings
 
@@ -29,8 +30,8 @@ class AgileSiteAppDirectoriesFinder(app_directories.Loader):
         site_prefixes = settings.SITE_FOLDERS.get(site_id, [])
 
         if not self.logged:
-            log.debug("Getting sources = {0} ({1}) - {2} {3}".format(
-                site_id,  site_prefixes, template_name, template_dirs))
+            msg = "Sources Site ID: %d  Site Root: %s Site-Prefixes: %r Template Name: %s Template Dirs: %r"
+            log.debug(msg, site_id, site_root, site_prefixes, template_name, template_dirs)
             self.logged = True
 
         if not isinstance(site_prefixes, (list, tuple)):
@@ -46,7 +47,7 @@ class AgileSiteAppDirectoriesFinder(app_directories.Loader):
                 template_dirs = app_directories.app_template_dirs
 
         for app_dir in template_dirs:
-            if site_root and site_root not in app_dir:
+            if site_root and os.path.abspath(site_root) not in os.path.abspath(app_dir):
                 continue
             for site_prefix in site_prefixes:
                 _app_template_dirs.append(safe_join(app_dir, site_prefix))
