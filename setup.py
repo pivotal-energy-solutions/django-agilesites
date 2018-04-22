@@ -196,6 +196,6 @@ setup(
     project_urls={  # Optional
         'Bug Reports': '{}/issues'.format(base_url),
         'Say Thanks!': 'http://saythanks.io/to/rh0dium',
-        'Source': basestring,
+        'Source': base_url,
     },
 )
