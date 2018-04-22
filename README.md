@@ -65,4 +65,10 @@ settings.SITE_ALIASES dictionary.  This will force //beta.bar.com to also use th
     }
 
 
+### Build Process:
+1.  Update the `__version_info__` inside of the application. Commit and push.
+2.  Tag the release with the version. `git tag <pypi package>-<version> -m "Release"; git push --tags`
+3.  Build the release `rm -rf dist build *egg-info; python setup.py sdist bdist_wheel`
+4.  Upload the data `twine upload dist/*`
+
 Have fun!

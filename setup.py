@@ -49,7 +49,7 @@ setup(
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
-    description='Dynamic switching of the settings.SIDE_ID for a Django Projectr',  # Required
+    description='Dynamic switching of the settings.SIDE_ID for a Django Project',  # Required
 
     # This is an optional longer description of your project that represents
     # the body of text which users will see when they visit PyPI.
@@ -79,7 +79,7 @@ setup(
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
     url=base_url,  # Optional
 
-    download_url='{0}/archive/{1}-{1}.tar.gz'.format(base_url, name, __version__),
+    download_url='{0}/archive/{1}-{2}.tar.gz'.format(base_url, name, __version__),
 
     # This should be your name or the name of the organization which owns the
     # project.
