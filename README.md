@@ -1,6 +1,10 @@
 Django Agile Sites (django_agilesites)
 ==================
 
+![Downloads](https://img.shields.io/pypi/dm/django-agilesites.svg?style=flat)
+![Python Versions](https://img.shields.io/pypi/pyversions/django-agilesites.svg?style=flat)
+![License](https://img.shields.io/pypi/l/django-agilesites.svg?version=latest)
+
 This provides django the ability of dynamic switching of the settings.SIDE_ID.  This allows
 you to then alter the template paths based on the SITE_ID by referencing settings.SITE_FOLDERS.
 
