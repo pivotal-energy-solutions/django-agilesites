@@ -14,7 +14,6 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 from django_agilesites import __name__, __version__
-name = __name__
 base_url = 'https://github.com/pivotal-energy-solutions/django-agilesites'
 
 # Get the long description from the README file
@@ -36,7 +35,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name=name,  # Required
+    name=__name__,  # Required
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -79,7 +78,7 @@ setup(
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
     url=base_url,  # Optional
 
-    download_url='{0}/archive/{1}-{2}.tar.gz'.format(base_url, name, __version__),
+    download_url='{0}/archive/{1}-{2}.tar.gz'.format(base_url, __version__),
 
     # This should be your name or the name of the organization which owns the
     # project.
