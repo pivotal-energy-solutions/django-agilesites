@@ -13,7 +13,7 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-from django_agilesites import __name__, __version__
+from django_agilesites import __name__, __version__, __author__
 base_url = 'https://github.com/pivotal-energy-solutions/django-agilesites'
 
 # Get the long description from the README file
@@ -82,7 +82,7 @@ setup(
 
     # This should be your name or the name of the organization which owns the
     # project.
-    author='Pivotal Energy Solutions',  # Optional
+    author=__author__,  # Optional
 
     # This should be a valid email address corresponding to the author listed
     # above.
