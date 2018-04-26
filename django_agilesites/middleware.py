@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from __future__ import unicode_literals
 from __future__ import print_function
 
@@ -23,8 +21,11 @@ class AgileSitesMiddleware(object):
     This supports hostname aliases.  Subdomains are not considered.
     """
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
 
+    def __call__(self, request):
+        # Process the request
         domain = request.get_host().split(':')[0]
         self.site_aliases = getattr(settings, "SITE_ALIASES", {})
 
@@ -42,16 +43,17 @@ class AgileSitesMiddleware(object):
                 site = Site.objects.get(domain=domain)
         except Site.DoesNotExist:
             site_id = getattr(settings, 'SITE_ID', 1)
-            site, create = Site.objects.get_or_create(id=site_id, defaults={'domain':domain})
+            site, create = Site.objects.get_or_create(id=site_id, defaults={'domain': domain})
             create = "Creating" if create else "Using existing"
             log.error("Request on domain %s (%s) has no matching Site object. %s to %s",
                       "{}".format(domain), "{}".format(query), create, "{!r}".format(site))
 
         SITE_ID.value = site.id
-        return None
 
+        # Perform request
+        response = self.get_response(request)
 
-    def process_response(self, request, response):
+        # Process the response
 
         if getattr(request, "urlconf", None):
             patch_vary_headers(response, ('Host',))
